@@ -11,7 +11,7 @@ type MatchingCassandraRepo struct {
 	session *gocql.Session
 }
 
-func NewMatchingCassandraRepo(session *gocql.Session) *MatchingCassandraRepo {
+func NewRepository(session *gocql.Session) *MatchingCassandraRepo {
 	return &MatchingCassandraRepo{session: session}
 }
 

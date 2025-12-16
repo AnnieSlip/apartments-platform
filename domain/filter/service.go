@@ -21,18 +21,16 @@ func NewService(repo Repository, aptRepo apartment.Repository, matchRepo matchin
 }
 
 func (s *Service) CreateOrUpdateFilter(ctx context.Context, userID int, filter models.ApartmentFilter) error {
-	// 1️⃣ save filter in Postgres
+	// save user filter in db
 	if err := s.repo.SaveFilter(ctx, userID, filter); err != nil {
 		return err
 	}
-
-	// 2️⃣ get matching apartments
 	apartments, err := s.aptRepo.GetApartmentsByFilter(ctx, filter)
 	if err != nil {
 		return err
 	}
 
-	// 3️⃣ save matches in Cassandra
+	//  save matches in cassandra
 	aptIDs := make([]int, len(apartments))
 	for i, a := range apartments {
 		aptIDs[i] = a.ID
