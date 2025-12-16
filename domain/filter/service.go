@@ -20,6 +20,10 @@ func NewService(repo Repository, aptRepo apartment.Repository, matchRepo matchin
 	return &Service{repo: repo, aptRepo: aptRepo, matchRepo: matchRepo}
 }
 
+func (s *Service) GetFiltersByUser(ctx context.Context, userID int) ([]models.ApartmentFilter, error) {
+	return s.repo.GetFiltersByUser(ctx, userID)
+}
+
 func (s *Service) CreateOrUpdateFilter(ctx context.Context, userID int, filter models.ApartmentFilter) error {
 	// save user filter in db
 	if err := s.repo.SaveFilter(ctx, userID, filter); err != nil {
