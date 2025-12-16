@@ -7,6 +7,6 @@ type Apartment struct {
 	RoomNumbers     int
 	BedroomNumbers  int
 	BathroomNumbers int
-	Address         string
+	District        string
 	City            string
 }

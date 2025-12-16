@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  # ------------------------
+  # PostgreSQL
+  # ------------------------
+  postgres:
+    image: postgres:15
+    container_name: apartments-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: apartments
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # Cassandra
+  # ------------------------
+  cassandra:
+    image: cassandra:4.1
+    container_name: apartments-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: ApartmentsCluster
+    volumes:
+      - cassdata:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ------------------------
+  # Cassandra migrations
+  # ------------------------
+  cassandra-migrate:
+    image: cassandra:4.1
+    container_name: apartments-cassandra-migrate
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./migrations/cassandra:/migrations
+    entrypoint: >
+      bash -c "
+      for f in /migrations/*.cql; do
+        echo Running $$f;
+        cqlsh cassandra 9042 -f $$f;
+      done
+      "
+
+  # ------------------------
+  # API
+  # ------------------------
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: apartments-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/apartments?sslmode=disable
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+
+volumes:
+  pgdata:
+  cassdata:

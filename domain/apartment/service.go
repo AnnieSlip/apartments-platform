@@ -18,3 +18,8 @@ func (s *Service) CreateApartment(ctx context.Context, a Apartment) (Apartment, 
 	// you can add validation or business rules here
 	return s.repo.Create(ctx, a)
 }
+
+func (s *Service) GetByFilter(ctx context.Context, a Apartment) (Apartment, error) {
+	// you can add validation or business rules here
+	return s.repo.Create(ctx, a)
+}
