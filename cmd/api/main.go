@@ -20,13 +20,15 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	// User routes
+	// user routes
 	e.GET("/users", app.UserHandler.ListUsers)
 	e.POST("/users", app.UserHandler.RegisterUser)
-
-	// Apartment routes
+	// apartment routes
 	e.GET("/apartments", app.ApartmentHandler.ListApartments)
 	e.POST("/apartments", app.ApartmentHandler.CreateApartment)
+	// filters routes
+	e.POST("/filters", app.FilterHandler.CreateOrUpdateFilter)
+	e.GET("/filters/:userID", app.FilterHandler.GetUserFilters)
 
 	log.Println("API server running on :8080")
 	log.Fatal(e.Start(":8080"))

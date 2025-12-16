@@ -15,6 +15,7 @@ import (
 type App struct {
 	UserHandler      *handler.UserHandler
 	ApartmentHandler *handler.ApartmentHandler
+	FilterHandler    *handler.FilterHandler
 	FilterService    *filter.Service
 }
 
@@ -33,21 +34,22 @@ func Init() *App {
 	userRepo := postgres.NewUserPostgresRepo()
 	aptRepo := postgres.NewApartmentPostgresRepo()
 	filterRepo := postgres.NewFilterPostgresRepo()
+	matchRepo := cassandra.NewRepository(cassandra.Session)
 
 	// services
 	userService := user.NewService(userRepo)
 	aptService := apartment.NewService(aptRepo)
+	filterService := filter.NewService(filterRepo, aptRepo, matchRepo)
 
 	// handlers
 	userHandler := handler.NewUserHandler(userService)
 	aptHandler := handler.NewApartmentHandler(aptService)
-
-	matchRepo := cassandra.NewRepository(cassandra.Session)
-	filterService := filter.NewService(filterRepo, aptRepo, matchRepo)
+	filterHandler := handler.NewFilterHandler(filterService)
 
 	return &App{
 		UserHandler:      userHandler,
 		ApartmentHandler: aptHandler,
+		FilterHandler:    filterHandler,
 		FilterService:    filterService,
 	}
 }
