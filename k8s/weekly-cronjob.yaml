@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekly-job
+  namespace: default
+spec:
+  # Run every Monday at 08:00 AM
+  schedule: "0 8 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: weekly-job
+              image: apartments-weekly-job:latest
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: POSTGRES_DSN
+                  value: "postgres://postgres:postgres@apartments-postgres:5432/apartments?sslmode=disable"
+                - name: CASSANDRA_HOST
+                  value: "apartments-cassandra"
+                - name: CASSANDRA_PORT
+                  value: "9042"
+          restartPolicy: OnFailure
