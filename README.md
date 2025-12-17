@@ -31,34 +31,22 @@ Besides, we use precompute job, because new apartments may be added after filter
 
 ---
 
-2. System Architecture
-   Components
+System Architecture
+Components
 
-API Layer (Echo-based REST API)
-
-Handles HTTP requests from clients.
+1. API Layer (Echo-based REST API) - Handles HTTP requests from clients.
 
 Routes include /users, /apartments, /filters, /health.
 
-All business logic is delegated to domain services.
+2. Domain Layer (Business Logic) - All business logic is delegated to domain services.
 
-Domain Layer (Business Logic)
-
-User Service: Manages user CRUD operations.
-
-Apartment Service: Handles apartment CRUD and query logic.
-
-Filter Service: Saves user filters, computes matches, stores results in Cassandra.
-
-Matching Service: Encapsulates Cassandra read/write operations.
-
-Storage Layer
+3. Storage Layer
 
 PostgreSQL: Stores users, apartments, and filters.
 
 Cassandra: Stores precomputed matches for fast retrieval.
 
-Jobs Layer
+4. Jobs Layer
 
 Precompute Job: Runs periodically or triggered to precompute matches for new apartments.
 
