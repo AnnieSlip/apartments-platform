@@ -71,5 +71,3 @@ Separation of concerns: API → Handlers → Services → Repositories → Datab
 Precomputation: Shifts heavy computation to write-time.
 
 Scalable storage: Cassandra for read-optimized precomputed matches.
-
-Extendable: Adding new jobs or services requires minimal changes.
