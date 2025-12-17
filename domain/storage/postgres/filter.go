@@ -44,3 +44,34 @@ func (r *FilterPostgresRepo) GetFiltersByUser(ctx context.Context, userID int) (
 
 	return filters, nil
 }
+
+func (r *FilterPostgresRepo) GetAllFilters(ctx context.Context) ([]models.UserFilter, error) {
+	rows, err := DB.Query(ctx, `
+		SELECT user_id, district, room_numbers, bedroom_numbers, bathroom_numbers, price_per_month
+		FROM user_filters
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []models.UserFilter
+
+	for rows.Next() {
+		var uf models.UserFilter
+		err := rows.Scan(
+			&uf.UserID,
+			&uf.Filter.District,
+			&uf.Filter.RoomNumbers,
+			&uf.Filter.BedroomNumbers,
+			&uf.Filter.BathroomNumbers,
+			&uf.Filter.MaxPrice,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, uf)
+	}
+
+	return res, nil
+}

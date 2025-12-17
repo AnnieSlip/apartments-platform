@@ -9,3 +9,8 @@ type ApartmentFilter struct {
 	City            string
 	District        string
 }
+
+type UserFilter struct {
+	UserID int
+	Filter ApartmentFilter
+}

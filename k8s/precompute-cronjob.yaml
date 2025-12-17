@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: precompute-job
+spec:
+  schedule: "0 2 * * *"  # every day at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: precompute
+              image: your-docker-image:latest
+              command: ["./precompute"]
+              env:
+                - name: POSTGRES_DSN
+                  value: "postgres://postgres:postgres@postgres:5432/apartments?sslmode=disable"
+                - name: CASSANDRA_HOST
+                  value: "cassandra"
+          restartPolicy: OnFailure

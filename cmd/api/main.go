@@ -27,7 +27,7 @@ func main() {
 	e.GET("/apartments", app.ApartmentHandler.ListApartments)
 	e.POST("/apartments", app.ApartmentHandler.CreateApartment)
 	// filters routes
-	e.POST("/filters", app.FilterHandler.CreateOrUpdateFilter)
+	e.POST("/filters/:userID", app.FilterHandler.CreateOrUpdateFilter)
 	e.GET("/filters/:userID", app.FilterHandler.GetUserFilters)
 
 	log.Println("API server running on :8080")

@@ -35,3 +35,22 @@ func (r *MatchingCassandraRepo) GetUserMatches(ctx context.Context, userID int, 
 	}
 	return aptIDs, nil
 }
+
+func (r *MatchingCassandraRepo) GetAllMatchesForWeek(ctx context.Context, week int) (map[int][]int, error) {
+	query := `SELECT user_id, apartment_ids FROM user_matches WHERE week = ?`
+	iter := r.session.Query(query, week).WithContext(ctx).Iter()
+
+	results := make(map[int][]int)
+	var userID int
+	var apartmentIDs []int
+
+	for iter.Scan(&userID, &apartmentIDs) {
+		results[userID] = apartmentIDs
+	}
+
+	if err := iter.Close(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}

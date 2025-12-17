@@ -78,6 +78,43 @@ services:
       POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/apartments?sslmode=disable
       CASSANDRA_HOST: cassandra
       CASSANDRA_PORT: 9042
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # Precompute job
+  # ------------------------
+  precompute:
+    build:
+      context: .
+      dockerfile: docker/precompute.Dockerfile
+    container_name: apartments-precompute
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/apartments?sslmode=disable
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+
+  # ------------------------
+  # Weekly notification job
+  # ------------------------
+  weekly-job:
+    build:
+      context: .
+      dockerfile: docker/weekly-job.Dockerfile
+    container_name: apartments-weekly-job
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/apartments?sslmode=disable
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
 
 volumes:
   pgdata:

@@ -47,3 +47,33 @@ func currentWeek() int {
 	_, week := time.Now().ISOWeek()
 	return week
 }
+
+func (s *Service) RecomputeAll(ctx context.Context) error {
+	filters, err := s.repo.GetAllFilters(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range filters {
+		apartments, err := s.aptRepo.GetApartmentsByFilter(ctx, f.Filter)
+		if err != nil {
+			return err
+		}
+
+		ids := make([]int, len(apartments))
+		for i, a := range apartments {
+			ids[i] = a.ID
+		}
+
+		if err := s.matchRepo.SaveUserMatches(
+			ctx,
+			f.UserID,
+			ids,
+			currentWeek(),
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
