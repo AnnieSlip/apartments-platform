@@ -49,7 +49,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: docker/api.Dockerfile
+      dockerfile: cmd/api/Dockerfile
     container_name: apartments-api
     ports:
       - "8080:8080"
@@ -62,10 +62,11 @@ services:
       POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/apartments?sslmode=disable
       ELASTICSEARCH_URL: http://elasticsearch:9200
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   # ------------------------
   # Weekly notification job
@@ -73,7 +74,7 @@ services:
   weekly-job:
     build:
       context: .
-      dockerfile: docker/weekly-job.Dockerfile
+      dockerfile: cmd/weekly-job/Dockerfile
     container_name: apartments-weekly-job
     depends_on:
       api:
