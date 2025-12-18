@@ -17,8 +17,4 @@ spec:
               env:
                 - name: POSTGRES_DSN
                   value: "postgres://postgres:postgres@apartments-postgres:5432/apartments?sslmode=disable"
-                - name: CASSANDRA_HOST
-                  value: "apartments-cassandra"
-                - name: CASSANDRA_PORT
-                  value: "9042"
           restartPolicy: OnFailure
