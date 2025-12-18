@@ -7,9 +7,10 @@ import (
 	"github.com/ani-javakhishvili/apartments-platform/domain/apartment"
 	"github.com/ani-javakhishvili/apartments-platform/domain/filter"
 	"github.com/ani-javakhishvili/apartments-platform/domain/handler"
-	"github.com/ani-javakhishvili/apartments-platform/domain/storage/cassandra"
+	esStorage "github.com/ani-javakhishvili/apartments-platform/domain/storage/elasticsearch"
 	"github.com/ani-javakhishvili/apartments-platform/domain/storage/postgres"
 	"github.com/ani-javakhishvili/apartments-platform/domain/user"
+	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 )
 
 type App struct {
@@ -17,29 +18,37 @@ type App struct {
 	ApartmentHandler *handler.ApartmentHandler
 	FilterHandler    *handler.FilterHandler
 	FilterService    *filter.Service
+	ESClient         *elasticsearch.Client
 }
 
 // initialize connects to DB and wires repositories, services, and handlers
 func Init() *App {
-	// connect to Postgres
 	ctx := context.Background()
 	if err := postgres.Connect(ctx); err != nil {
 		log.Fatalf("postgres connection failed: %v", err)
 	}
-	// initialize cassandra
-	if err := cassandra.Connect(); err != nil {
-		log.Fatalf("cassandra connection failed: %v", err)
+
+	// elastic search
+	esClient, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses: []string{"http://elasticsearch:9200"},
+	})
+	if err != nil {
+		log.Fatalf("elasticsearch client init failed: %v", err)
+	}
+
+	// create indices if they don't exist
+	if err := esStorage.CreateIndices(esClient); err != nil {
+		log.Fatalf("failed to create ES indices: %v", err)
 	}
 	// repositories
 	userRepo := postgres.NewUserPostgresRepo()
 	aptRepo := postgres.NewApartmentPostgresRepo()
 	filterRepo := postgres.NewFilterPostgresRepo()
-	matchRepo := cassandra.NewRepository(cassandra.Session)
 
 	// services
 	userService := user.NewService(userRepo)
 	aptService := apartment.NewService(aptRepo)
-	filterService := filter.NewService(filterRepo, aptRepo, matchRepo)
+	filterService := filter.NewService(filterRepo, aptRepo)
 
 	// handlers
 	userHandler := handler.NewUserHandler(userService)
@@ -51,5 +60,6 @@ func Init() *App {
 		ApartmentHandler: aptHandler,
 		FilterHandler:    filterHandler,
 		FilterService:    filterService,
+		ESClient:         esClient,
 	}
 }

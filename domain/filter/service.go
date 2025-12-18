@@ -6,18 +6,15 @@ import (
 
 	"github.com/ani-javakhishvili/apartments-platform/domain/apartment"
 	"github.com/ani-javakhishvili/apartments-platform/domain/models"
-
-	"github.com/ani-javakhishvili/apartments-platform/domain/matching"
 )
 
 type Service struct {
-	repo      Repository
-	aptRepo   apartment.Repository
-	matchRepo matching.Repository
+	repo    Repository
+	aptRepo apartment.Repository
 }
 
-func NewService(repo Repository, aptRepo apartment.Repository, matchRepo matching.Repository) *Service {
-	return &Service{repo: repo, aptRepo: aptRepo, matchRepo: matchRepo}
+func NewService(repo Repository, aptRepo apartment.Repository) *Service {
+	return &Service{repo: repo, aptRepo: aptRepo}
 }
 
 func (s *Service) GetFiltersByUser(ctx context.Context, userID int) ([]models.ApartmentFilter, error) {
@@ -29,51 +26,10 @@ func (s *Service) CreateOrUpdateFilter(ctx context.Context, userID int, filter m
 	if err := s.repo.SaveFilter(ctx, userID, filter); err != nil {
 		return err
 	}
-	apartments, err := s.aptRepo.GetApartmentsByFilter(ctx, filter)
-	if err != nil {
-		return err
-	}
-
-	//  save matches in cassandra
-	aptIDs := make([]int, len(apartments))
-	for i, a := range apartments {
-		aptIDs[i] = a.ID
-	}
-
-	return s.matchRepo.SaveUserMatches(ctx, userID, aptIDs, currentWeek())
+	return nil
 }
 
 func currentWeek() int {
 	_, week := time.Now().ISOWeek()
 	return week
-}
-
-func (s *Service) RecomputeAll(ctx context.Context) error {
-	filters, err := s.repo.GetAllFilters(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, f := range filters {
-		apartments, err := s.aptRepo.GetApartmentsByFilter(ctx, f.Filter)
-		if err != nil {
-			return err
-		}
-
-		ids := make([]int, len(apartments))
-		for i, a := range apartments {
-			ids[i] = a.ID
-		}
-
-		if err := s.matchRepo.SaveUserMatches(
-			ctx,
-			f.UserID,
-			ids,
-			currentWeek(),
-		); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
