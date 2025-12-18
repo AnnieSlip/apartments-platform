@@ -9,13 +9,21 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
+type EsRepo struct {
+	Client *elasticsearch.Client
+}
+
+func NewEsRepo(client *elasticsearch.Client) *EsRepo {
+	return &EsRepo{Client: client}
+}
+
 type Filter struct {
 	UserID string                 `json:"user_id"`
 	Query  map[string]interface{} `json:"query"`
 }
 
 // SaveFilter stores a user’s filter as a percolator query in Elasticsearch
-func SaveFilter(ctx context.Context, es *elasticsearch.Client, userID string, filter map[string]interface{}) error {
+func (r *EsRepo) SaveFilter(ctx context.Context, userID string, filter map[string]interface{}) error {
 	filterDoc := Filter{
 		UserID: userID,
 		Query:  filter,
@@ -26,7 +34,7 @@ func SaveFilter(ctx context.Context, es *elasticsearch.Client, userID string, fi
 		return fmt.Errorf("failed to marshal filter: %w", err)
 	}
 
-	res, err := es.Index(
+	res, err := r.Client.Index(
 		"filters",
 		strings.NewReader(string(data)),
 	)
@@ -44,7 +52,7 @@ func SaveFilter(ctx context.Context, es *elasticsearch.Client, userID string, fi
 
 // MatchApartment checks which saved filters match a given apartment using Elasticsearch percolator.
 // runs a percolate query on filters index and lists of userIDs whose filters match this apartment.
-func MatchApartment(ctx context.Context, es *elasticsearch.Client, apartment map[string]interface{}) ([]string, error) {
+func (r *EsRepo) MatchApartment(ctx context.Context, apartment map[string]interface{}) ([]string, error) {
 	query := map[string]interface{}{
 		"query": map[string]interface{}{
 			"percolate": map[string]interface{}{
@@ -59,10 +67,10 @@ func MatchApartment(ctx context.Context, es *elasticsearch.Client, apartment map
 		return nil, err
 	}
 
-	res, err := es.Search(
-		es.Search.WithContext(ctx),
-		es.Search.WithIndex("filters"),
-		es.Search.WithBody(strings.NewReader(string(data))),
+	res, err := r.Client.Search(
+		r.Client.Search.WithContext(ctx),
+		r.Client.Search.WithIndex("filters"),
+		r.Client.Search.WithBody(strings.NewReader(string(data))),
 	)
 	if err != nil {
 		return nil, err

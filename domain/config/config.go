@@ -44,11 +44,12 @@ func Init() *App {
 	userRepo := postgres.NewUserPostgresRepo()
 	aptRepo := postgres.NewApartmentPostgresRepo()
 	filterRepo := postgres.NewFilterPostgresRepo()
+	esRepo := esStorage.NewEsRepo(esClient)
 
 	// services
 	userService := user.NewService(userRepo)
 	aptService := apartment.NewService(aptRepo)
-	filterService := filter.NewService(filterRepo, aptRepo)
+	filterService := filter.NewService(filterRepo, aptRepo, esRepo)
 
 	// handlers
 	userHandler := handler.NewUserHandler(userService)

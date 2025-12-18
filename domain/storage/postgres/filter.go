@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ani-javakhishvili/apartments-platform/domain/models"
 )
@@ -74,4 +75,19 @@ func (r *FilterPostgresRepo) GetAllFilters(ctx context.Context) ([]models.UserFi
 	}
 
 	return res, nil
+}
+
+func (r *FilterPostgresRepo) DeleteFilter(ctx context.Context, userID int) error {
+	res, err := DB.Exec(ctx, `DELETE FROM user_filters WHERE user_id = $1`, userID)
+	if err != nil {
+		return fmt.Errorf("failed to delete filter for user %d: %w", userID, err)
+	}
+
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		// optional: return error if no filter existed
+		return fmt.Errorf("no filter found for user %d", userID)
+	}
+
+	return nil
 }
