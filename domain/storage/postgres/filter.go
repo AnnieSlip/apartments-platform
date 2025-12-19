@@ -25,7 +25,7 @@ func (r *FilterPostgresRepo) SaveFilter(ctx context.Context, userID int, f model
 
 func (r *FilterPostgresRepo) GetFiltersByUser(ctx context.Context, userID int) ([]models.ApartmentFilter, error) {
 	rows, err := DB.Query(ctx, `
-        SELECT district, room_numbers, bedroom_numbers, bathroom_numbers, price_per_month
+        SELECT user_id, max_price, min_price, district, room_numbers, bedroom_numbers, bathroom_numbers
         FROM user_filters
         WHERE user_id = $1
     `, userID)
@@ -48,7 +48,7 @@ func (r *FilterPostgresRepo) GetFiltersByUser(ctx context.Context, userID int) (
 
 func (r *FilterPostgresRepo) GetAllFilters(ctx context.Context) ([]models.UserFilter, error) {
 	rows, err := DB.Query(ctx, `
-		SELECT user_id, district, room_numbers, bedroom_numbers, bathroom_numbers, price_per_month
+		SELECT user_id, max_price, min_price, district, room_numbers, bedroom_numbers, bathroom_numbers
 		FROM user_filters
 	`)
 	if err != nil {
@@ -67,6 +67,7 @@ func (r *FilterPostgresRepo) GetAllFilters(ctx context.Context) ([]models.UserFi
 			&uf.Filter.BedroomNumbers,
 			&uf.Filter.BathroomNumbers,
 			&uf.Filter.MaxPrice,
+			&uf.Filter.MinPrice,
 		)
 		if err != nil {
 			return nil, err

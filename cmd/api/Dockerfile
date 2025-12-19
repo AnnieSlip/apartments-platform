@@ -2,6 +2,9 @@ FROM golang:1.24-alpine
 
 WORKDIR /app
 
+# Install curl
+RUN apk add --no-cache curl
+
 COPY go.mod go.sum ./
 RUN go mod download
 
