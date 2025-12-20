@@ -8,16 +8,7 @@ import (
 	"time"
 
 	"github.com/ani-javakhishvili/apartments-platform/domain/models"
-	"github.com/elastic/go-elasticsearch/v8"
 )
-
-type EsRepo struct {
-	Client *elasticsearch.Client
-}
-
-func NewEsRepo(client *elasticsearch.Client) *EsRepo {
-	return &EsRepo{Client: client}
-}
 
 type Filter struct {
 	UserID string                 `json:"user_id"`

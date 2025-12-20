@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/ani-javakhishvili/apartments-platform/domain/apartment"
+	"github.com/ani-javakhishvili/apartments-platform/domain/models"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -24,7 +26,7 @@ func (h *ApartmentHandler) ListApartments(c echo.Context) error {
 }
 
 func (h *ApartmentHandler) CreateApartment(c echo.Context) error {
-	var req apartment.Apartment
+	var req models.Apartment
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

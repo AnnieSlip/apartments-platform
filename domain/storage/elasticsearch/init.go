@@ -6,6 +6,14 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
+type EsRepo struct {
+	Client *elasticsearch.Client
+}
+
+func NewEsRepo(client *elasticsearch.Client) *EsRepo {
+	return &EsRepo{Client: client}
+}
+
 func CreateIndices(es *elasticsearch.Client) error {
 	indices := map[string]string{
 		"apartments": ApartmentsMapping,

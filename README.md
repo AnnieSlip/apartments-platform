@@ -1,61 +1,69 @@
-# Apartments Platform
+Apartments Platform
 
-Hybrid system using PostgreSQL and Cassandra to deliver apartment listings
-to millions of users using precomputed filters.
+Backend service for managing apartments, user filters, and real-time matching using PostgreSQL and Elasticsearch percolators.
 
-## Tech Stack
+This service allows:
 
-- Go
-- PostgreSQL
-- Cassandra
-- Docker
-- Kubernetes
+- Creating apartments with attributes (price, rooms, district, city, etc.)
+- Users to define filters for apartments
+- Automatic percolation in Elasticsearch to find users whose filters match newly added apartments
+- Optional notifications for matched users
+  `
+  Mental Model
 
-📐 Apartments Matching Platform – Design Overview
+- Source of Truth: PostgreSQL database - All permanent data about apartments and user filters is stored in the database. Ensures reliable persistence and backup.
 
-We use precomputation + read optimization.
+- Elasticsearch: Apartments and user filters are indexed in Elasticsearch to support percolation queries. When a new apartment is added, Elasticsearch runs percolator queries to find all users whose filters match the apartment.
 
-Filters and apartments are stored in PostgreSQL (source of truth)
+- Future improvements: If indexing an apartment in Elasticsearch fails, consider queuing the apartment in Redis or Kafka to retry indexing later (all of these are written as a comments in the code)
 
-When a user creates or updates a filter:
+Architecture
 
-Matching apartments are computed immediately
+The project is structured with clear separation of concerns, following SOLID principles.
 
-Results are stored in Cassandra as precomputed matches
+We use modules to have clean architecture. Each layer has a single responsibility and can operate independently. Dependencies are injected via constructors, promoting loose coupling.
 
-Weekly notifications read directly from Cassandra (O(1) access)
+- Request layer: Defines the incoming request structures (DTOs). Handles validation and parsing of input data.
+  Domain Layer
 
-This shifts cost from read-time to write-time, which is more predictable and scalable.
+- Domain layer: Contains the core business logic and models. Defines interfaces for repositories, services, and other dependencies. Fully decoupled from transport or database implementations.
 
-Besides, we use precompute job, because new apartments may be added after filters were created. Precompute works on filters, not users. Filters define the matching logic, and each filter belongs to a user. The repository returns (userID, filter) pairs so the service stays independent from database schema.
+- Initialization - The init functions in Go start the necessary services, repositories, and connections (DB, Elasticsearch, caches). Ensures that all components are ready before handling requests.
 
----
+API Endpoints
 
-System Architecture
-Components
+- POST /apartments – Create an apartment
 
-1. API Layer (Echo-based REST API) - Handles HTTP requests from clients.
+body :
 
-Routes include /users, /apartments, /filters, /health.
+{
+"title": "Apartment 1",
+"price_per_month": 1000,
+"room_numbers": 3,
+"bedroom_numbers": 2,
+"bathroom_numbers": 1,
+"district": "Saburtalo",
+"city": "Tbilisi"
+}
 
-2. Domain Layer (Business Logic) - All business logic is delegated to domain services.
+- POST /filters/:userID – Create or update a user filter
 
-3. Storage Layer
+body :
 
-PostgreSQL: Stores users, apartments, and filters.
+{
+"min_price": 500,
+"max_price": 1500,
+"room_numbers": [2,3],
+"bedroom_numbers": [1,2],
+"bathroom_numbers": [1],
+"city": "Tbilisi",
+"district": "Vake"
+}
 
-Cassandra: Stores precomputed matches for fast retrieval.
+- POST /users - Creates a user
 
-4. Jobs Layer
+body :
 
-Precompute Job: Runs periodically or triggered to precompute matches for new apartments.
-
-Weekly Notification Job: Sends weekly updates to users based on precomputed matches.
-
-Key Design Principles
-
-Separation of concerns: API → Handlers → Services → Repositories → Database.
-
-Precomputation: Shifts heavy computation to write-time.
-
-Scalable storage: Cassandra for read-optimized precomputed matches.
+{
+"email": "randomEmail@gmail.com"
+}

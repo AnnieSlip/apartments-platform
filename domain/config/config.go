@@ -48,7 +48,7 @@ func Init() *App {
 
 	// services
 	userService := user.NewService(userRepo)
-	aptService := apartment.NewService(aptRepo)
+	aptService := apartment.NewService(aptRepo, esRepo)
 	filterService := filter.NewService(filterRepo, aptRepo, esRepo)
 
 	// handlers
