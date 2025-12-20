@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/ani-javakhishvili/apartments-platform/domain/models"
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
@@ -23,17 +25,33 @@ type Filter struct {
 }
 
 // SaveFilter stores a user’s filter as a percolator query in Elasticsearch
-func (r *EsRepo) SaveFilter(ctx context.Context, userID string, filter map[string]interface{}) error {
-	filterDoc := Filter{
-		UserID: userID,
-		Query:  filter,
+func (r *EsRepo) SaveFilter(ctx context.Context, userID string, f models.ApartmentFilter) error {
+	// Prepare the document to be stored in the percolator index
+	filterDoc := map[string]interface{}{
+		"user_id":    userID,
+		"created_at": time.Now().UTC().Format(time.RFC3339),
+		"query": map[string]interface{}{
+			"percolate": map[string]interface{}{
+				"field": "query", // the percolator field
+				"document": map[string]interface{}{
+					"city":             f.City,
+					"district":         f.District,
+					"price_per_month":  f.MaxPrice, // max price, can add min logic if needed
+					"room_numbers":     f.RoomNumbers,
+					"bedroom_numbers":  f.BedroomNumbers,
+					"bathroom_numbers": f.BathroomNumbers,
+				},
+			},
+		},
 	}
 
+	// Marshal to JSON
 	data, err := json.Marshal(filterDoc)
 	if err != nil {
 		return fmt.Errorf("failed to marshal filter: %w", err)
 	}
 
+	// Index into Elasticsearch
 	res, err := r.Client.Index(
 		"filters",
 		strings.NewReader(string(data)),

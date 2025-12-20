@@ -15,5 +15,5 @@ type Repository interface {
 
 // EsRepository handles Elasticsearch storage
 type EsRepository interface {
-	SaveFilter(ctx context.Context, userID string, filter map[string]interface{}) error
+	SaveFilter(ctx context.Context, userID string, filter models.ApartmentFilter) error
 }
