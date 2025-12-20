@@ -67,3 +67,31 @@ body :
 {
 "email": "randomEmail@gmail.com"
 }
+
+- POST /apartments - Creates an apartment
+
+  curl -X POST "http://localhost:8080/apartments" \
+   -H "Content-Type: application/json" \
+   -d '{
+  "title": "Modern 2-bedroom Apartment",
+  "price_per_month": 1200,
+  "room_numbers": 3,
+  "bedroom_numbers": 2,
+  "bathroom_numbers": 1,
+  "district": "Vake",
+  "city": "Tbilisi"
+  }'
+
+- check apartments in elastic search
+
+curl -X GET "http://localhost:9200/apartments/\_search?pretty&q=\*"
+
+- check matchings in elastic search
+
+curl -X GET "http://localhost:9200/apartments/\_search?pretty" -H 'Content-Type: application/json' -d '{
+"query": {
+"match": {
+"city": "Tbilisi"
+}
+}
+}'
